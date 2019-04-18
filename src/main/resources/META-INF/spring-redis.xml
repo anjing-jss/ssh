@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+
+	<context:property-placeholder location="classpath*:redis.properties" />
+	<!-- redis连接 -->
+	<bean id="jedisConnectionFactory"
+		class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<constructor-arg ref="sentinel" />
+		<property name="database" value="${redis.db}" />
+		<property name="password" value="${redis.password}" />
+	</bean>
+
+	<bean id="sentinel"
+		class="org.springframework.data.redis.connection.RedisSentinelConfiguration">
+		<property name="master">
+			<bean class="org.springframework.data.redis.connection.RedisNode">
+				<property name="name" value="mymaster" />
+			</bean>
+		</property>
+		<property name="sentinels">
+			<list>
+				<bean class="org.springframework.data.redis.connection.RedisNode">
+					<constructor-arg value="${connection.host1}" /><!-- 
+						redis服务器地址 -->
+					<constructor-arg value="${connection.port}" /><!-- 端口号 -->
+				</bean>
+				<bean class="org.springframework.data.redis.connection.RedisNode">
+					<constructor-arg value="${connection.host2}" />
+					<constructor-arg value="${connection.port}" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<!-- redis template definition p表示对该bean里面的属性进行注入，格式为p:属性名=注入的对象 效果与在bean里面使用<property>标签一样 -->
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory" />
+		<!-- 序列化方式 建议key/hashKey采用StringRedisSerializer。 -->
+		<property name="keySerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="hashKeySerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="valueSerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+		</property>
+		<property name="hashValueSerializer">
+			<bean
+				class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+		</property>
+	</bean>
+	
+	<bean id="redisOps" class="com.hshbic.cloud.util.UdseStringRedisOps">
+        <property name="connectionFactory" ref="jedisConnectionFactory"/>
+    </bean>
+
+</beans>

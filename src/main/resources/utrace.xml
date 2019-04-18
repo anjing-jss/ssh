@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+<!-- 自动扫描 ,将带有注解的类 纳入spring容器管理 -->
+	<context:component-scan base-package="com.hshbic.utrace" />
+
+	<!-- utrace核心类定义，注：id必须为uTrace -->
+	<bean id="uTrace" class="com.hshbic.utrace.UTrace" scope="singleton"
+		init-method="init">
+		<property name="location" value="classpath:utrace_extractor.xml" />
+	</bean>
+
+	<!-- dubbo 组件定义-->
+	<bean class="com.hshbic.utrace.dubbo.UTraceDubboManagementBean"
+		scope="singleton">
+		<property name="uTrace" ref="uTrace"/>
+	</bean>
+</beans>

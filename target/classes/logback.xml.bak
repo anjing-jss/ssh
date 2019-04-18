@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- configuration file for LogBack (slf4J implementation)
+See here for more details: http://gordondickens.com/wordpress/2013/03/27/sawing-through-the-java-loggers/ -->
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+        <!-- 定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径 -->
+   <property name="LOG_HOME" value="${APP_HOME}/logs" />
+        <appender name="FileSize" class="ch.qos.logback.core.rolling.RollingFileAppender">
+           <append>true</append>   
+           <file>${LOG_HOME}/common.log</file>
+           <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">   
+                <fileNamePattern>${LOG_HOME}/common.%i.log.zip</fileNamePattern>   
+                <minIndex>1</minIndex>   
+                <maxIndex>100</maxIndex>   
+           </rollingPolicy>      
+           <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">   
+                <maxFileSize>500MB</maxFileSize>   
+           </triggeringPolicy>   
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} %M[%L] - %msg%n </pattern>
+            </encoder>
+        </appender>
+
+<appender name="AuditFormatAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+   <Encoding>UTF-8</Encoding>
+   <append>true</append>
+   <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>/export/logs/oss/oss-${APP_NAME}-%d{yyyyMMddHH}.%i.json.log
+      </fileNamePattern>
+      <maxHistory>3</maxHistory>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+         <maxFileSize>100MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+   </rollingPolicy>
+   <layout class="ch.qos.logback.classic.PatternLayout">
+      <Pattern>%msg%n</Pattern>
+   </layout>
+</appender>
+
+<appender name="AsyncAuditFormatAppender"
+        class="ch.qos.logback.classic.AsyncAppender">
+   <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+   <discardingThreshold>0</discardingThreshold>
+   <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+   <queueSize>100000</queueSize>
+   <!-- 添加附加的appender,最多只能添加一个 -->
+   <appender-ref ref="AuditFormatAppender" />
+</appender>
+
+
+<logger name="AuditFormat" level="error" additivity="false">
+       <appender-ref ref="AsyncAuditFormatAppender" />
+   </logger>
+<!--
+    <logger name="com.hshbic" level="WARN"/>
+    <logger name="org.springframework.web" level="infor"/>
+    <logger name="com.hshbic.m2m.app" level="info"/>
+    <logger name="com.hshbic.cloud.m2m.thrift" level="infor"/>
+    <logger name="org.apache.http.wire" level="infor"/>
+    <logger name="com.hshbic.m2m.app.impl.SimpleMiaClient" level="WARN"/>
+   <logger name="com.hshbic.m2m.app.common.service.impl.UserDeviceBindingServiceImpl" level= "debug"/>   
+	 <logger name="com.haierubic.enabling.msgplatform" level="trace"/>
+   <logger name="com.hshbic.cloud.m2m.utils.KafkaUtils" level="info"/>
+   <logger name="com.hshbic.m2m.app.impl.MiaSubscriber" level= "debug"/>  
+   <logger name="com.hshbic.m2m.app.impl.SimpleMiaClient" level= "debug"/>
+     <logger name="com.hshbic.m2m.app.common.listener.M2MDeviceEventsListenerImpl" level= "debug"/>
+  -->
+	<property name="serviceName" value="combo_op"/>
+       <!-- 服务链式跟踪日志 start -->
+    <appender name="UTraceLoggingReporter" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/export/logs/oss/oss-${serviceName}-%d{yyyy-MM-dd-HH}.%i.json.log</fileNamePattern>
+            <maxHistory>3</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%msg%n</Pattern>
+        </layout>
+    </appender>
+	<appender name="AsyncUTraceLoggingReporter" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>100000</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="UTraceLoggingReporter" />
+    </appender>
+    <logger name="com.hshbic.utrace.reporter.UTraceLoggingReporter" additivity="false">
+        <level value="info" />
+        <appender-ref ref="AsyncUTraceLoggingReporter" />
+    </logger>
+    <!-- 服务链式跟踪日志 end -->
+
+    <root level="info">
+        <appender-ref ref="FileSize"/>
+    </root>
+
+
+</configuration>
